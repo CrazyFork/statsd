@@ -125,4 +125,4 @@ scenarios:
   range will be reasonable. You might be able to go higher, but you are at the mercy
   of all the hops in your route.
 
-*(These payload numbers take into account the maximum IP + UDP header sizes)*
+*(These [payload](payload) numbers take into account the maximum IP + UDP header sizes)*

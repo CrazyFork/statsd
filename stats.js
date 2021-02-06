@@ -72,19 +72,49 @@ let conf;
 function flushMetrics() {
   const time_stamp = Math.round(new Date().getTime() / 1000);
   if (old_timestamp > 0) {
+	//:bm, substract another flushInterval is because we sheduled after a new span of flushInterval
+	// this line should idealy be zero
     gauges[timestamp_lag_namespace] = (time_stamp - old_timestamp - (Number(conf.flushInterval)/1000));
   }
   old_timestamp = time_stamp;
 
   const metrics_hash = {
+	/*
+	 * @type: Map<string, number>
+	 *
+	 * map key: timer key
+	 */
     counters: counters,
+
+	/*
+	 * @type: Map<string, number>
+	 *
+	 * map key: timer key
+	 */
     gauges: gauges,
+	/*
+	 * @type: Map<string, number[]>
+	 *
+	 * map key: timer key
+	 * map value: array of time of each ops spend recorded under this timer key
+	 */
     timers: timers,
+
+	// @type: number, num of counts that processed per sec.
     timer_counters: timer_counters,
+
+	// unique values
     sets: sets,
+	
+	// @type: number, number of counts that been done per sec.
     counter_rates: counter_rates,
+
     timer_data: timer_data,
+	
+	// @type: number[], eg, [95, 99], which percentile should be calculated
     pctThreshold: pctThreshold,
+
+	// histogram info for timer
     histogram: conf.histogram
   };
 
@@ -171,6 +201,7 @@ function sanitizeKeyName(key) {
   }
 }
 
+// offset time = ((now - start_time) % interval + 1)
 function getFlushTimeout(interval) {
   const now = new Date().getTime()
   const deltaTime = now - startup_time * 1000;
@@ -227,6 +258,8 @@ config.configFile(process.argv[2], function (config) {
   if (config.keyNameSanitize !== undefined) {
     keyNameSanitize = config.keyNameSanitize;
   }
+  
+  // prevent double entry
   if (!serversLoaded) {
 
     // key counting
@@ -243,6 +276,7 @@ config.configFile(process.argv[2], function (config) {
         metrics = [ packet_data ] ;
       }
 
+	  // metrics: string[]
       for (const midx in metrics) {
         if (metrics[midx].length === 0) {
           continue;
@@ -334,6 +368,7 @@ config.configFile(process.argv[2], function (config) {
       startServer(server_config[i], server, handlePacket);
     }
 
+	// :bm, starts management server
     mgmt_server.start(
       config,
       function(cmd, parameters, stream) {
@@ -388,6 +423,7 @@ config.configFile(process.argv[2], function (config) {
               stream.write("END\n\n");
             });
 
+			// todo: 
             // Let each backend contribute its status
             backendEvents.emit('status', function(err, name, stat, val) {
               if (err) {
@@ -464,6 +500,7 @@ config.configFile(process.argv[2], function (config) {
     // Setup the flush timer
     const flushInt = setTimeout(flushMetrics, getFlushTimeout(flushInterval));
 
+	//:todo
     if (keyFlushInterval > 0) {
       const keyFlushPercent = Number((config.keyFlush && config.keyFlush.percent) || 100);
       const keyFlushLog = config.keyFlush && config.keyFlush.log;
