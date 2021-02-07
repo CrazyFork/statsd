@@ -85,6 +85,9 @@ done:
 * 
 pending:
 * syslog
+* https://www.youtube.com/watch?v=zaRkONvyGr8&ab_channel=GauravSen
+* https://github.com/CrazyFork/consistent
+* write a blog
 
 
 
